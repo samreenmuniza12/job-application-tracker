@@ -6,7 +6,7 @@ export default function ApplicationList({ applications }) {
     return (
       <EmptyState
         title="No applications to display"
-        description="This list is empty. Adding applications will be available in Module 3."
+        description="This list is empty. Use Add application to create an entry."
       />
     );
   }
