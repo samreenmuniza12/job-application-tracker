@@ -1,16 +1,42 @@
-# React + Vite
+# RoleTrail
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A beginner React portfolio project for organizing job applications.
 
-Currently, two official plugins are available:
+## Current progress
+Module 1: responsive UI foundation.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Reusable Button, Header, and EmptyState components
+- Responsive dashboard page
+- Keyboard-accessible skip link
+- Disabled add button with an explanation
 
-## React Compiler
+Application forms, listings, and persistence are planned.
+The current version does not save or manage applications.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
+React, JavaScript, Vite, Tailwind CSS, and ESLint.
+Development environment: Node.js 22.20.0.
 
-## Expanding the ESLint configuration
+## Run locally
+Install dependencies: npm ci
+Start development server: npm run dev
+Open the Local URL shown in the terminal.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Quality checks
+Lint: npm run lint
+Production build: npm run build
+Manual UI checks passed for desktop, narrow screens, and keyboard navigation.
+Automated behavior tests are planned with interactive features.
+
+## Structure
+- src/components/ui: reusable UI components
+- src/components/layout: layout components
+- src/pages: page composition
+
+## Git workflow
+main -> dev -> feature/* or fix/*
+Feature/fix branches merge into dev through pull requests.
+Verified module releases merge from dev into main through pull requests.
+
+## Learning approach
+Built module by module with AI-assisted guidance and code review.
