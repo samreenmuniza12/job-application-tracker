@@ -1,3 +1,5 @@
+import ApplicationForm from "../components/applications/ApplicationForm";
+import { useState } from "react";
 import Header from "../components/layout/Header";
 import Button from "../components/ui/Button";
 import ApplicationList from "../components/applications/ApplicationList";
@@ -5,7 +7,19 @@ import ApplicationSummary from "../components/applications/ApplicationSummary";
 import { sampleApplications } from "../data/sampleApplications";
 
 export default function DashboardPage() {
-  const applications = sampleApplications;
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [userApplications, setUserApplications] = useState([]);
+  const [successMessage, setSuccessMessage] = useState("");
+  const isDemo = userApplications.length === 0;
+  const applications = isDemo ? sampleApplications : userApplications;
+
+  function handleAddApplication(values) {
+    const newApplication = { ...values, id: crypto.randomUUID() };
+    setUserApplications(previous => [newApplication, ...previous]);
+    setSuccessMessage(
+      `Added ${values.role} at ${values.company}. Total applications: ${userApplications.length + 1}.`
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -21,18 +35,42 @@ export default function DashboardPage() {
             <p className="mt-3 max-w-lg leading-7 text-slate-600">Organize your applications and follow each opportunity from application to outcome.</p>
           </div>
           <div className="flex flex-col items-start gap-2">
-            <Button disabled describedBy="add-application-help">Add application</Button>
-            <p id="add-application-help" className="max-w-xs text-xs leading-5 text-slate-600">Adding applications will be available in Module 3.</p>
+            <Button
+              onClick={() => setIsFormOpen(previous => !previous)}
+              expanded={isFormOpen}
+              controls="add-application-section"
+              describedBy="add-application-help"
+            >
+              {isFormOpen ? "Close form" : "Add application"}
+            </Button>
+            <p id="add-application-help" className="max-w-xs text-xs leading-5 text-slate-600">Your entries will be lost when you refresh this page.</p>
           </div>
         </div>
         <p className="mt-6 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm leading-6 text-indigo-900">
-          <strong>Demo mode:</strong> These fictional records show how RoleTrail works. They are not your real applications. Nothing is saved yet.
+          {isDemo ? (
+            <><strong>Demo mode:</strong> These fictional records are examples. Adding your first application replaces them with your own list.</>
+          ) : (
+            <><strong>Your applications:</strong> Only your entries are shown. They are lost on refresh; demo records return.</>
+          )}
+        </p>
+        <section
+          id="add-application-section"
+          hidden={!isFormOpen}
+          aria-labelledby="add-application-heading"
+          className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
+        >
+          <h2 id="add-application-heading" className="text-lg font-semibold text-slate-900">Add an application</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Track the company, role, applied date and current status.</p>
+          <ApplicationForm onAddApplication={handleAddApplication} />
+        </section>
+        <p role="status" aria-atomic="true" className="mt-4 break-words text-sm font-medium text-emerald-800">
+          {successMessage}
         </p>
         <ApplicationSummary applications={applications} />
         <section aria-labelledby="applications-heading" className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
-            <h2 id="applications-heading" className="text-lg font-semibold text-slate-900">Sample applications</h2>
-            <p className="mt-1 text-sm text-slate-600">Fictional examples for exploring the application list.</p>
+            <h2 id="applications-heading" className="text-lg font-semibold text-slate-900">{isDemo ? "Sample applications" : "Your applications"}</h2>
+            <p className="mt-1 text-sm text-slate-600">{isDemo ? "Fictional examples for exploring the application list." : "Applications you added during this session."}</p>
           </div>
           <ApplicationList applications={applications} />
         </section>
