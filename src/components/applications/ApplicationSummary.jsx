@@ -12,7 +12,7 @@ export default function ApplicationSummary({ applications }) {
   return (
     <section aria-labelledby="summary-heading" className="mt-8">
       <h2 id="summary-heading" className="text-lg font-semibold text-slate-900">
-        Demo application summary
+        Application summary
       </h2>
       <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {summary.map(({ label, count }) => (
