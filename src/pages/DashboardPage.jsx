@@ -5,13 +5,41 @@ import Button from "../components/ui/Button";
 import ApplicationList from "../components/applications/ApplicationList";
 import ApplicationSummary from "../components/applications/ApplicationSummary";
 import { sampleApplications } from "../data/sampleApplications";
+import {
+  loadApplications,
+  saveApplications,
+} from "../services/applicationStorage";
+
 
 export default function DashboardPage() {
+    function getInitialStorage() {
+      try {
+        return {
+          applications: loadApplications(),
+          error: "",
+        };
+      } catch {
+        return {
+          applications: null,
+          error: "Saved applications could not be loaded.",
+        };
+      }
+    }  
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [userApplications, setUserApplications] = useState([]);
+  const [initialStorage] = useState(getInitialStorage);
+
+  const [userApplications, setUserApplications] = useState(
+    initialStorage.applications ?? []
+  );
+
+  const [storageError, setStorageError] = useState(
+    initialStorage.error
+  );
   const [editingApplication, setEditingApplication] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const [isDemo, setIsDemo] = useState(true);
+  const [isDemo, setIsDemo] = useState(
+     initialStorage.applications === null
+    );
   const applications = isDemo ? sampleApplications : userApplications;
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -51,17 +79,32 @@ function handleCancelEditing() {
     setSuccessMessage("");
   }
 
+  function persistApplications(nextApplications) {
+    setUserApplications(nextApplications);
+    setIsDemo(false);
+
+    try {
+      saveApplications(nextApplications);
+      setStorageError("");
+    } catch {
+      setStorageError(
+        "Changes could not be saved. They may be lost on refresh."
+      );
+    }
+  }
+
   function handleUpdateApplication(values) {
-    setUserApplications(previous =>
-      previous.map(application =>
-        application.id === editingApplication.id
-          ? { ...application, ...values }
-          : application
-      )
+    const nextApplications = userApplications.map(application =>
+      application.id === editingApplication.id
+        ? { ...application, ...values }
+        : application
     );
+
+    persistApplications(nextApplications);
     setSuccessMessage(`Updated ${values.role} at ${values.company}.`);
     handleCancelEditing();
   }
+
   function handleDeleteApplication(application) {
     const confirmed = window.confirm(
       `Delete ${application.role} at ${application.company}?`
@@ -73,22 +116,29 @@ function handleCancelEditing() {
       handleCancelEditing();
     }
 
-    setUserApplications(previous =>
-      previous.filter(item => item.id !== application.id)
+    const nextApplications = userApplications.filter(
+      item => item.id !== application.id
     );
+
+    persistApplications(nextApplications);
     setSuccessMessage(
       `Deleted ${application.role} at ${application.company}.`
     );
   }
+
   function handleAddApplication(values) {
-    setIsDemo(false);
-    const newApplication = { ...values, id: crypto.randomUUID() };
-    setUserApplications(previous => [newApplication, ...previous]);
+    const newApplication = {
+      ...values,
+      id: crypto.randomUUID(),
+    };
+
+    const nextApplications = [newApplication, ...userApplications];
+
+    persistApplications(nextApplications);
     setSuccessMessage(
-      `Added ${values.role} at ${values.company}. Total applications: ${userApplications.length + 1}.`
+      `Added ${values.role} at ${values.company}. Total applications: ${nextApplications.length}.`
     );
   }
-
   return (
     <div className="min-h-screen bg-slate-50">
       <a href="#main-content" className="sr-only rounded-md bg-white px-4 py-3 font-semibold text-indigo-700 focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50">
@@ -111,14 +161,14 @@ function handleCancelEditing() {
             >
               {isFormOpen ? "Close form" : "Add application"}
             </Button>
-            <p id="add-application-help" className="max-w-xs text-xs leading-5 text-slate-600">Your entries will be lost when you refresh this page.</p>
+            <p id="add-application-help" className="max-w-xs text-xs leading-5 text-slate-600">Your applications are saved in this browser when storage is available.</p>
           </div>
         </div>
         <p className="mt-6 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-sm leading-6 text-indigo-900">
           {isDemo ? (
             <><strong>Demo mode:</strong> These fictional records are examples. Adding your first application replaces them with your own list.</>
           ) : (
-            <><strong>Your applications:</strong> Only your entries are shown. They are lost on refresh; demo records return.</>
+            <><strong>Your applications:</strong> Only your entries are shown. Changes are saved in this browser when storage is available.</>
           )}
         </p>
         <section
@@ -139,11 +189,19 @@ function handleCancelEditing() {
         <p role="status" aria-atomic="true" className="mt-4 break-words text-sm font-medium text-emerald-800">
           {successMessage}
         </p>
+        {storageError && (
+          <p
+            role="alert"
+            className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800"
+          >
+            {storageError}
+          </p>
+        )}
         <ApplicationSummary applications={applications} />
         <section aria-labelledby="applications-heading" className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
             <h2 id="applications-heading" className="text-lg font-semibold text-slate-900">{isDemo ? "Sample applications" : "Your applications"}</h2>
-            <p className="mt-1 text-sm text-slate-600">{isDemo ? "Fictional examples for exploring the application list." : "Applications you added during this session."}</p>
+            <p className="mt-1 text-sm text-slate-600">{isDemo ? "Fictional examples for exploring the application list." : "Your personal application list."}</p>
           </div>
           {applications.length > 0 && visibleApplications.length === 0 ? (
             <p className="p-5 text-sm text-slate-600 sm:p-6">
