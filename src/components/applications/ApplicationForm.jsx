@@ -3,21 +3,23 @@ import Button from "../ui/Button";
 
 const inputClass = "mt-2 block min-h-11 w-full rounded-lg border border-slate-400 bg-white px-3 py-2 text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700";
 
-export default function ApplicationForm({ onAddApplication }) {
-  const [company, setCompany] = useState("");
-  const [role, setRole] = useState("");
-  const [appliedDate, setAppliedDate] = useState("");
-  const [status, setStatus] = useState("Applied");
+export default function ApplicationForm({ onSaveApplication, application = null, onCancel }) {
+  const [company, setCompany] = useState(application?.company ?? "");
+  const [role, setRole] = useState(application?.role ?? "");
+  const [appliedDate, setAppliedDate] = useState(application?.appliedDate ?? "");
+  const [status, setStatus] = useState(application?.status ?? "Applied");
 
   function handleSubmit(event) {
     event.preventDefault();
 
-    onAddApplication({
+    onSaveApplication({
       company: company.trim(),
       role: role.trim(),
       appliedDate,
       status,
     });
+
+    if (application) return;
 
     setCompany("");
     setRole("");
@@ -73,7 +75,18 @@ export default function ApplicationForm({ onAddApplication }) {
         </div>
       </div>
       <div className="mt-6">
-        <Button type="submit">Save application</Button>
+        <Button type="submit">
+          {application ? "Save changes" : "Save application"}
+        </Button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="ml-3 min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700"
+          >
+            Cancel
+          </button>
+        )}
       </div>
     </form>
   );
