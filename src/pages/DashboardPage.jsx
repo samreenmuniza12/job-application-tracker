@@ -9,11 +9,58 @@ import { sampleApplications } from "../data/sampleApplications";
 export default function DashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [userApplications, setUserApplications] = useState([]);
+  const [editingApplication, setEditingApplication] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const isDemo = userApplications.length === 0;
+  const [isDemo, setIsDemo] = useState(true);
   const applications = isDemo ? sampleApplications : userApplications;
 
+  function handleCancelEditing() {
+    setEditingApplication(null);
+    setIsFormOpen(false);
+  }
+
+  function handleToggleForm() {
+    setEditingApplication(null);
+    setIsFormOpen(previous => !previous);
+  }
+
+  function handleEditApplication(application) {
+    setEditingApplication(application);
+    setIsFormOpen(true);
+    setSuccessMessage("");
+  }
+
+  function handleUpdateApplication(values) {
+    setUserApplications(previous =>
+      previous.map(application =>
+        application.id === editingApplication.id
+          ? { ...application, ...values }
+          : application
+      )
+    );
+    setSuccessMessage(`Updated ${values.role} at ${values.company}.`);
+    handleCancelEditing();
+  }
+  function handleDeleteApplication(application) {
+    const confirmed = window.confirm(
+      `Delete ${application.role} at ${application.company}?`
+    );
+
+    if (!confirmed) return;
+
+    if (editingApplication?.id === application.id) {
+      handleCancelEditing();
+    }
+
+    setUserApplications(previous =>
+      previous.filter(item => item.id !== application.id)
+    );
+    setSuccessMessage(
+      `Deleted ${application.role} at ${application.company}.`
+    );
+  }
   function handleAddApplication(values) {
+    setIsDemo(false);
     const newApplication = { ...values, id: crypto.randomUUID() };
     setUserApplications(previous => [newApplication, ...previous]);
     setSuccessMessage(
@@ -36,7 +83,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-col items-start gap-2">
             <Button
-              onClick={() => setIsFormOpen(previous => !previous)}
+              onClick={handleToggleForm}
               expanded={isFormOpen}
               controls="add-application-section"
               describedBy="add-application-help"
@@ -59,9 +106,14 @@ export default function DashboardPage() {
           aria-labelledby="add-application-heading"
           className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
         >
-          <h2 id="add-application-heading" className="text-lg font-semibold text-slate-900">Add an application</h2>
+          <h2 id="add-application-heading" className="text-lg font-semibold text-slate-900">{editingApplication ? "Edit application" : "Add an application"}</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">Track the company, role, applied date and current status.</p>
-          <ApplicationForm onAddApplication={handleAddApplication} />
+          <ApplicationForm
+            key={editingApplication?.id ?? "new"}
+            application={editingApplication}
+            onSaveApplication={editingApplication ? handleUpdateApplication : handleAddApplication}
+            onCancel={handleCancelEditing}
+          />
         </section>
         <p role="status" aria-atomic="true" className="mt-4 break-words text-sm font-medium text-emerald-800">
           {successMessage}
@@ -72,7 +124,7 @@ export default function DashboardPage() {
             <h2 id="applications-heading" className="text-lg font-semibold text-slate-900">{isDemo ? "Sample applications" : "Your applications"}</h2>
             <p className="mt-1 text-sm text-slate-600">{isDemo ? "Fictional examples for exploring the application list." : "Applications you added during this session."}</p>
           </div>
-          <ApplicationList applications={applications} />
+          <ApplicationList applications={applications} onDelete={isDemo ? undefined : handleDeleteApplication} onEdit={isDemo ? undefined : handleEditApplication} />
         </section>
         <p className="mt-4 text-sm leading-6 text-slate-600">Tip: keep the job description link handy when you apply.</p>
       </main>
