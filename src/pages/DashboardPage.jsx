@@ -13,8 +13,29 @@ export default function DashboardPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isDemo, setIsDemo] = useState(true);
   const applications = isDemo ? sampleApplications : userApplications;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const normalizedQuery = searchQuery.trim().toLowerCase();
 
-  function handleCancelEditing() {
+const visibleApplications = applications
+  .filter(application => {
+    const matchesSearch =
+      application.company.toLowerCase().includes(normalizedQuery) ||
+      application.role.toLowerCase().includes(normalizedQuery);
+
+    const matchesStatus =
+      statusFilter === "all" || application.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  })
+  .sort((a, b) => {
+    return sortOrder === "newest"
+      ? b.appliedDate.localeCompare(a.appliedDate)
+      : a.appliedDate.localeCompare(b.appliedDate);
+  });
+
+function handleCancelEditing() {
     setEditingApplication(null);
     setIsFormOpen(false);
   }
@@ -124,7 +145,66 @@ export default function DashboardPage() {
             <h2 id="applications-heading" className="text-lg font-semibold text-slate-900">{isDemo ? "Sample applications" : "Your applications"}</h2>
             <p className="mt-1 text-sm text-slate-600">{isDemo ? "Fictional examples for exploring the application list." : "Applications you added during this session."}</p>
           </div>
-          <ApplicationList applications={applications} onDelete={isDemo ? undefined : handleDeleteApplication} onEdit={isDemo ? undefined : handleEditApplication} />
+          {applications.length > 0 && visibleApplications.length === 0 ? (
+            <p className="p-5 text-sm text-slate-600 sm:p-6">
+              No matching applications. Try another company or job title.
+            </p>
+          ) : (
+            <ApplicationList
+              applications={visibleApplications}
+              onDelete={isDemo ? undefined : handleDeleteApplication}
+              onEdit={isDemo ? undefined : handleEditApplication}
+            />
+          )}          
+            <div className="px-5 pt-5 sm:px-6">
+              <label
+                htmlFor="application-search"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Search applications
+              </label>
+              <input
+                id="application-search"
+                type="search"
+                value={searchQuery}
+                onChange={event => setSearchQuery(event.target.value)}
+                placeholder="Search by company or job title"
+                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600"
+               />
+                <label
+                  htmlFor="status-filter"
+                  className="mt-4 block text-sm font-medium text-slate-700"
+                >
+                  Filter by status
+                </label>
+                <select
+                  id="status-filter"
+                  value={statusFilter}
+                  onChange={event => setStatusFilter(event.target.value)}
+                  className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600"
+                >
+                  <option value="all">All statuses</option>
+                  <option value="Applied">Applied</option>
+                  <option value="Interview">Interview</option>
+                  <option value="Offer">Offer</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+                <label
+                  htmlFor="sort-order"
+                  className="mt-4 block text-sm font-medium text-slate-700"
+                >
+                  Sort by applied date
+                </label>
+                <select
+                  id="sort-order"
+                  value={sortOrder}
+                  onChange={event => setSortOrder(event.target.value)}
+                  className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600"
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                </select>                
+            </div>       
         </section>
         <p className="mt-4 text-sm leading-6 text-slate-600">Tip: keep the job description link handy when you apply.</p>
       </main>
