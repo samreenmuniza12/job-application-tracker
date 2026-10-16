@@ -1,5 +1,9 @@
 # RoleTrail
 
+## Live demo
+
+[Open RoleTrail](https://my-roletrail.vercel.app/)
+
 A responsive job application tracker built with React and JavaScript.
 
 ## Features
